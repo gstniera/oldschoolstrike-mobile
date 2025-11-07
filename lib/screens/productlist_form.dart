@@ -29,7 +29,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Center(child: Text('ᯓ★Create New Product⋆˚࿔')),
-        backgroundColor: const Color(0xff8aaee0),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
         foregroundColor: Colors.white,
       ),
       drawer: LeftDrawer(),
@@ -39,10 +39,11 @@ class _ProductFormPageState extends State<ProductFormPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // === Title ===
+              // === Name ===
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
+                  maxLength: 255, // tampilkan counter di UI
                   decoration: InputDecoration(
                     hintText: "Enter product name",
                     labelText: "Name",
@@ -52,12 +53,17 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   ),
                   onChanged: (String? value) {
                     setState(() {
-                      _name = value!;
+                      _name = value ?? "";
                     });
                   },
                   validator: (String? value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.trim().isEmpty) {
                       return "Product name cannot be empty!";
+                    }
+                    // hitung huruf
+                    final length = value.trim().length;
+                    if (length > 255) {
+                      return "Product name cannot be over 255 letters (there's $length).";
                     }
                     return null;
                   },

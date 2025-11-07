@@ -69,3 +69,49 @@ Jawaban:
 > Perbedaan hot reload dengan hot restart adalah hot reload menyuntikkan perubahan kode secara langsung ke dalam aplikasi yang sedang berjalan dan mempertahankan status aplikasi, sementara hot restart menghentikan aplikasi lalu memulai kembali dari awal tanpa mempertahankan status sebelumnya. Hot reload ideal untuk perubahan cepat pada UI dan logika kecil, sedangkan hot restart lebih cocok untuk perubahan besar seperti struktur aplikasi. 
 - reference:
 https://alan.co.id/perbedaan-antara-hot-reload-dan-hot-restart-di-flutter/#:~:text=Perbedaan%20Hot%20Reload%20dan%20Hot%20Restart%20*,hot%20reload%20dengan%20menggunakan%20tombol%20keyboard%20ctrl+/.
+
+
+TUGAS INDIVIDU 8:
+1. Jelaskan perbedaan antara Navigator.push() dan Navigator.pushReplacement() pada Flutter. Dalam kasus apa sebaiknya masing-masing digunakan pada aplikasi Football Shop kamu?
+a. Navigator.push()
+Metode push() menambahkan suatu route baru ke dalam stack route yang dikelola oleh Navigator. Route yang baru ditambahkan akan berada di posisi paling atas stack, sehingga route tersebut akan muncul dan ditampilkan kepada user. Karena halaman sebelumnya tetap berada di bawah halaman baru dalam stack, user bisa balik ke halaman sebelumnya (misal dengan tombol Back di hp).
+> Kapan pake Navigator.push()?
+Navigator.push() digunakan ketika kita ingin menambah halaman sementara di atas halaman saat ini dan kita ingin user memiliki opsi untuk kembali:
+Ketika user milih opsi 'Add Product' dari drawer, Navigator.push() digunakan untuk menavigasi ke ProductFormPage. Dengan menggunakan push(), halaman Menu (MyHomePage) tetap berada di bawah halaman Formulir dalam stack. Ini membuat user untuk menekan tombol Back dan kembali ke halaman Menu tanpa menutup aplikasi.
+b. Navigator.pushReplacement()
+Metode pushReplacement() menghapus route yang sedang ditampilkan kepada user (yang berada di paling atas stack) dan menggantinya secara langsung dengan route yang baru. Route lama pada atas stack digantikan oleh route baru tanpa mengubah kondisi elemen stack yang berada di bawahnya. Karena halaman sebelumnya udah dihapus dari stack dan diganti, user ga bisa balik ke halaman yang baru diganti tersebut.
+> Kapan pake Navigator.pushReplacement()?
+Navigator.pushReplacement() dipake ketika kita ingin mengganti halaman sekarang dengan halaman baru, dan kita ga ingin user bisa balik ke halaman yang baru saja ditinggalkan. Ini sering digunakan untuk navigasi ke halaman utama atau setelah proses otentikasi (login/signup):
+Ketika user mengklik opsi 'Home' dari LeftDrawer, Navigator.pushReplacement() digunakan untuk menavigasi ke MyHomePage. Menggunakan pushReplacement() akan membersihkan stack di atasnya dan mastiin user tidak dapat menekan "Back" untuk kembali ke form yang baru saja mereka buat. 
+
+2. Bagaimana kamu memanfaatkan hierarchy widget seperti Scaffold, AppBar, dan Drawer untuk membangun struktur halaman yang konsisten di seluruh aplikasi?
+a. Scaffold adalah widget yang menyediakan kerangka struktur dasar untuk sebuah halaman atau layar.Dengan menggunakan Scaffold pada setiap halaman (misalnya MyHomePage dan ProductFormPage), kita memastiin setiap layar punya fondasi standar yang memungkinkan penambahan komponen utama seperti AppbBar (bagian atas halaman), body (konten utama), dan Drawer (menu disamping) secara konsisten,
+b. AppBar adalah bagian atas halaman yang biasanya menampilkan judul aplikasi. Untuk konsistensi, setiap Scaffold menyertakan properti appBar dan meskipun detail di dalamnya (seperti judul teks atau warna latar belakang) dapat disesuaikan untuk setiap halaman (misalnya MyHomePage memiliki judul 'Oldschool Strike', sementara halaman formul memiliki judul 'Create New Product'), kegunaan header di lokasi yang sama memberikan tampilan yang konsisten.
+c. Drawer adalah menu yang muncul dari sisi kiri atau kanan layar dan biasanya berisi tautan navigasi ke halaman lain dalam aplikasi. Misalnya, di dalam LeftDrawer, navigasi ke halaman 'Home' menggunakan Navigator.pushReplacement, sementara navigasi ke halaman 'Add Product' menggunakan Navigator.push. Karena definisi navigasi ini terpusat di satu tempat (LeftDrawer.dart), semua halaman yang menggunakannya akan memiliki perilaku navigasi yang sama.
+
+3. Dalam konteks desain antarmuka, apa kelebihan menggunakan layout widget seperti Padding, SingleChildScrollView, dan ListView saat menampilkan elemen-elemen form? Berikan contoh penggunaannya dari aplikasi kamu.
+a. Padding adalah widget yang berfungsi untuk memberikan jarak kosong di sekeliling child widget-nya.
+> Kelebihan:
+- Readability: mastiin elemen-elemen form ga saling menempel untuk ningkatin keterbacaan dan membuat interface terlihat lebih rapi.
+- Aksesibilitas: Dengan adanya jarak, user lebih mudah berinteraksi dengan satu elemen input tanpa tidak sengaja menekan elemen di sebelahnya.
+> Contoh Penggunaan:
+Di ProductFormPage, setiap elemen input selalu dibungkus oleh Padding (Name, Price, Description, Category, dan tombol "Save"). Hal ini membuat form terstruktur dan ga berimpitan.
+b. SingleChildScrollView adalah widget yang berfungsi untuk membuat konten di dalamnya bisa scrollable.
+> Kelebihan:
+- Pencegahan Overflow: ketika user mengklik input field, keyboard virtual akan muncul dan mengurangi ruang layar yang tersedia. Tanpa SingleChildScrollView, jika elemen form melebihi sisa ruang layar, aplikasi akan mengalami render overflow error (konten tumpah/melebihi batas).
+- Dukungan Konten Panjang: Memungkinkan kita menempatkan banyak input field yang mungkin melebihi tinggi fisik layar perangkat tetapi tetap dapat diakses dengan cara di scroll ke atas atau bawah.
+> Contoh Penggunaan:
+Di ProductFormPage, seluruh konten form utama dibungkus di dalam SingleChildScrollView dimana widget tsb mastiin bahwa semua field (termasuk validasi dan tombol "Save") tetap terlihat, meskipun pada layar kecil atau saat keyboard muncul.
+c. ListView adalah widget yang mengatur child widget sebagai scrollable list. Mirip dengan SingleChildScrollView tetapi secara default mengoptimalkan untuk tampilan daftar yang sangat panjang.
+> Kelebihan:
+ListView dominan dalam struktur yang membutuhkan daftar item yang mungkin melebihi layar, seperti menu navigasi untuk 
+- Efisiensi List: Menyediakan daftar vertikal elemen yang dapat di scroll.
+- Struktur Navigasi: Cocok digunakan untuk membuat daftar navigasi yang konsisten.
+> Contoh Penggunaan:
+Dalam widget Drawer (LeftDrawer) dimana dengan menggunakan ListView, jika jumlah menu (ListTile) bertambah, menu samping tersebut akan otomatis bisa di scroll, menjaga konsistensi dan fungsionalitas navigasi
+
+4. Bagaimana kamu menyesuaikan warna tema agar aplikasi Football Shop memiliki identitas visual yang konsisten dengan brand toko?
+- Menggunakan Theme Color Scheme
+Beberapa bagian aplikasi menggunakan referensi ke colorScheme aplikasi secara keseluruhan. Jika warna brand toko diatur pada scheme ini, maka semua widget yang merujuk padanya akan konsisten. Latar belakang AppBar pada halaman utama (MyHomePage) diatur untuk mengambil warna dari tema aplikasi.
+- Mengatur Warna Eksplisit
+Beberapa elemen yang berfungsi sebagai navigasi dan interaksi menggunakkan hardcoding. Ini memastikan bahwa elemen tersebut selalu menampilkan warna brand yang spesifik, terlepas dari scheme warna utama lainnya (misalnya tombol all products, my products, and create products).

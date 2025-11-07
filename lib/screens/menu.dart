@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:oldschool_strike/widgets/left_drawer.dart';
+import 'package:oldschool_strike/widgets/product_card.dart';
 
 class MyHomePage extends StatelessWidget {
   MyHomePage({super.key});
@@ -142,54 +143,4 @@ class ItemHomepage {
   final Color textColor;
 
   ItemHomepage(this.name, this.icon, this.bgColor, this.textColor);
-}
-
-class ItemCard extends StatelessWidget {
-  // Menampilkan kartu dengan ikon dan nama.
-
-  final ItemHomepage item;
-
-  const ItemCard(this.item, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: item.bgColor, // gunakan warna dari item
-      borderRadius: BorderRadius.circular(12),
-
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        // Aksi ketika kartu ditekan.
-        onTap: () {
-          // Menampilkan pesan SnackBar saat kartu ditekan.
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text("Kamu telah menekan tombol ${item.name}!"),
-              ),
-            );
-        },
-        // Container untuk menyimpan Icon dan Text
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          child: Center(
-            child: Column(
-              // Menyusun ikon dan teks di tengah kartu.
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(item.icon, color: item.textColor, size: 30.0),
-                const Padding(padding: EdgeInsets.all(3)),
-                Text(
-                  item.name,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: item.textColor),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
