@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:oldschool_strike/widgets/left_drawer.dart';
 
 class MyHomePage extends StatelessWidget {
   MyHomePage({super.key});
@@ -8,13 +9,13 @@ class MyHomePage extends StatelessWidget {
   final String kelas = "A"; //kelas
   final List<ItemHomepage> items = [
     ItemHomepage(
-      "All Products",
+      "All Products₊˚⊹♡",
       Icons.storefront,
       const Color(0xFF628ECB), // #628ECB (biru)
       Colors.white,
     ),
     ItemHomepage(
-      "My Products",
+      "My Products(˶ˆ꒳ˆ˵)",
       Icons.inventory_2,
       const Color(0xFF9FE3B6), // #9fe3b6 (hijau)
       Colors.white,
@@ -37,8 +38,9 @@ class MyHomePage extends StatelessWidget {
           'ᯓ⚽︎LDSCHOOL STRIKEᯓ',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF8AAEE0), // #8aaee0
+        backgroundColor: Theme.of(context).colorScheme.secondary,
       ),
+      drawer: LeftDrawer(),
       // Body halaman dengan padding di sekelilingnya.
       body: Padding(
         padding: const EdgeInsets.all(16.0),
