@@ -42,6 +42,7 @@ class MyHomePage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.secondary,
       ),
       drawer: LeftDrawer(),
+      backgroundColor: const Color(0xFFEAF6FF),
       // Body halaman dengan padding di sekelilingnya.
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -75,6 +76,7 @@ class MyHomePage extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18.0,
+                        color: Color(0xFF395886),
                       ),
                     ),
                   ),
@@ -117,6 +119,7 @@ class InfoCard extends StatelessWidget {
     return Card(
       // Membuat kotak kartu dengan bayangan dibawahnya.
       elevation: 2.0,
+      color: const Color(0xFFD5DEEF),
       child: Container(
         // Mengatur ukuran dan jarak di dalam kartu.
         width:
@@ -126,9 +129,15 @@ class InfoCard extends StatelessWidget {
         // Menyusun title dan content secara vertikal.
         child: Column(
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF395886),
+              ),
+            ),
             const SizedBox(height: 8.0),
-            Text(content),
+            Text(content, style: const TextStyle(color: Color(0xFF395886))),
           ],
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:oldschool_strike/screens/productlist_form.dart';
 import 'package:oldschool_strike/screens/menu.dart';
+import 'package:oldschool_strike/screens/product_entry_list.dart';
 
 class ItemCard extends StatelessWidget {
   final ItemHomepage item;
@@ -29,6 +30,23 @@ class ItemCard extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const ProductFormPage()),
+            );
+          }
+          // Add this condition in your onTap handler
+          else if (item.name == "All Products₊˚⊹♡") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProductEntryListPage(),
+              ),
+            );
+          }
+          else if (item.name == "My Products(˶ˆ꒳ˆ˵)") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProductEntryListPage(onlyMine: true),
+              ),
             );
           }
         },
