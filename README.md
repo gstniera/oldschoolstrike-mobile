@@ -115,3 +115,98 @@ Dalam widget Drawer (LeftDrawer) dimana dengan menggunakan ListView, jika jumlah
 Beberapa bagian aplikasi menggunakan referensi ke colorScheme aplikasi secara keseluruhan. Jika warna brand toko diatur pada scheme ini, maka semua widget yang merujuk padanya akan konsisten. Latar belakang AppBar pada halaman utama (MyHomePage) diatur untuk mengambil warna dari tema aplikasi.
 - Mengatur Warna Eksplisit
 Beberapa elemen yang berfungsi sebagai navigasi dan interaksi menggunakkan hardcoding. Ini memastikan bahwa elemen tersebut selalu menampilkan warna brand yang spesifik, terlepas dari scheme warna utama lainnya (misalnya tombol all products, my products, and create products).
+
+
+TUGAS INDIVIDU 9:
+1. Jelaskan mengapa kita perlu membuat model Dart saat mengambil/mengirim data JSON? Apa konsekuensinya jika langsung memetakan Map<String, dynamic> tanpa model (terkait validasi tipe, null-safety, maintainability)?
+Model menjamin type safety, null-safety, dan maintainability, sehingga bug yang seharusnya muncul saat runtime terdeteksi lebih awal di compile-time.
+- Keamanan tipe: model memberi tipe eksplisit -> autocompletion, pemeriksaan compile-time, mengurangi runtime errors ketika backend berubah.
+- Null-safety: model memaksa penanganan null secara eksplisit (mis. String? vs String), mengurangi null-reference bugs.
+- Akses field lewat properti (obj.nama) lebih aman daripada data['name'] yang rentan typo.
+- Model berfungsi sebagai dokumentasi lokal dan memaksa penyesuaian saat API berubah.
+- Kode lebih bersih, mudah diuji, dan direfactor.
+model = blueprint data dan memindahkan risiko dari runtime ke compile-time, sehingga aplikasi lebih aman dan mudah dipelihara.
+
+2. Apa fungsi package http dan CookieRequest dalam tugas ini? Jelaskan perbedaan peran http vs CookieRequest.
+a. http (package):
+- Untuk kirim/terima data lewat HTTP (GET/POST dll).
+- Bekerja di level transport: stateless, nggak ingat login atau cookie.
+= Gunakan `http.Client` kalau mau connection pooling/gampang di-mock saat testing.
+b. CookieRequest (pbp_django_auth):
+- Wrapper di atas `http` yang mengingat cookie sesi otomatis.
+- Menangkap `Set-Cookie` saat login dan menempelkan cookie itu ke request berikutnya.
+* Bermanfaat kalau backend pakai session-based auth (mis. Django). Biasanya disimpan sebagai Provider supaya bisa dipakai di seluruh app.
+Perbedaan inti:
+a. `http` = mesin kirim/terima data (tidak menyimpan status). Cocok kalo cuma ingin ambil data publik.
+b. `CookieRequest` = `http` + manajemen cookie/sesi (ingat siapa yang login). Cocok kalo butuh login/session ke Django.
+
+
+3. Jelaskan mengapa instance CookieRequest perlu untuk dibagikan ke semua komponen di aplikasi Flutter.
+Instance CookieRequest harus dibagikan karena dua hal yaitu menjaga sesi (cookie) dan menghemat sumber daya jaringan.
+1) Jaga integritas sesi (cookie) supaya user tetap login:
+CookieRequest menyimpan cookie sesi (mis. sessionid). Kalau tiap widget bikin instance baru, cookie itu nggak terbawa dan server menganggap request berikutnya tidak terautentikasi. Fitur yang butuh login gagal, user “terlogout” tiba-tiba.
+2) Kinerja & stabilitas jaringan:
+Mengulang-ulang membuat http.Client/CookieRequest bikin overhead (buka/tutup koneksi TCP terus), boros socket, dan bisa sebabkan SocketException. Pakai satu instance memungkinkan reuse connection pooling dimana lebih cepat dan stabil.
+Konsekuensi kalau tidak dibagikan diantaranya adalah kehilangan sesi, request jadi tidak terautentikasi, performa turun, dan potensi error jaringan.
+
+4. Jelaskan konfigurasi konektivitas yang diperlukan agar Flutter dapat berkomunikasi dengan Django. Mengapa kita perlu menambahkan 10.0.2.2 pada ALLOWED_HOSTS, mengaktifkan CORS dan pengaturan SameSite/cookie, dan menambahkan izin akses internet di Android? Apa yang akan terjadi jika konfigurasi tersebut tidak dilakukan dengan benar?
+- Agar Flutter di emulator Android bisa berkomunikasi dan tetap terautentikasi dengan backend Django, perlu beberapa pengaturan seperti menggunakan `10.0.2.2` agar emulator mengakses host lokal dan tambahkan ke `ALLOWED_HOSTS`. `10.0.2.2` dipakai di emulator untuk mengarah ke server di mesin host.
+- Aktifkan CORS dan izinkan kredensial agar cookie sesi bisa dikirim. Set `CORS_ALLOW_CREDENTIALS = True` agar cookie/session dapat dipakai.
+- Setel `SameSite=None` supaya cookie cross-site diterima serta tambahkan izin `INTERNET` di `AndroidManifest`. Tanpa konfigurasi ini, permintaan akan diblokir, cookie tidak dikirim sehingga user “tidak login”, Django bisa menolak request (400), atau Android memblokir koneksi.
+- Jangan pakai `'*'` untuk origin bila mengizinkan kredensial dan sebutkan origin secara eksplisit.
+
+5. Jelaskan mekanisme pengiriman data mulai dari input hingga dapat ditampilkan pada Flutter.
+Saat user mengisi form di Flutter, data divalidasi lalu diserialisasi ke JSON dan dikirim lewat HTTP (biasanya menggunakan CookieRequest agar cookie sesi ikut dikirim). Django menerima JSON, deserialisasi menjadi objek Python, memproses/menyimpan data, lalu mengembalikan respons JSON. Flutter menerima respons, deserialisasi JSON ke Map lalu memetakan ke model Dart (mis. ProductEntry.fromJson) sehingga UI bisa menampilkan data yang sudah ber-type-safe.
+1) Input & validasi (Flutter): user isi TextFormField; form divalidasi (_formKey).
+2) Serialisasi: data dikumpulkan ke Map<String,dynamic> ke jsonEncode() ke JSON string.
+3) Kirim (HTTP): kirim POST/GET memakai CookieRequest (jika perlu sesi) atau http.Client. Cookie sesi otomatis dilampirkan oleh CookieRequest.
+4) Terima & proses (Django): Django json.loads() JSON lalu validasi server-side lalu simpan ke DB / jalankan logika bisnis.
+5) Respon (Django ke Flutter): Django kirim JsonResponse (status/data).
+6) Deserialisasi (Flutter): json.decode() -> Map/List -> tiap item diubah jadi objek model Dart lewat fromJson.
+7) Render UI: widget (mis. FutureBuilder, ListView/GridView) menggunakan objek model untuk menampilkan data dengan aman.
+
+6. Jelaskan mekanisme autentikasi dari login, register, hingga logout. Mulai dari input data akun pada Flutter ke Django hingga selesainya proses autentikasi oleh Django dan tampilnya menu pada Flutter.
+- User mengisi form di Flutter 
+- Data dikirim ke endpoint Django (JSON)  
+- Untuk register Django membuat akun dan merespons sukses 
+- Untuk login Django memverifikasi kredensial lalu memanggil auth_login yang membuat sesi server dan mengirim header Set-Cookie (mis. sessionid) ke klien 
+- CookieRequest di Flutter (instance yang dibagikan lewat Provider) otomatis menyimpan cookie itu
+- Setelah itu setiap request Flutter melampirkan cookie sesi sehingga Django (melalui AuthenticationMiddleware) mengenali request.user dan mengizinkan akses 
+- Ketika user logout Flutter memanggil endpoint logout, Django memanggil auth_logout untuk menghapus sesi server, CookieRequest menghapus cookie lokal, dan UI kembali ke halaman login.
+
+7. Jelaskan bagaimana cara kamu mengimplementasikan checklist di atas secara step-by-step! (bukan hanya sekadar mengikuti tutorial):
+a. Memastikan deployment proyek tugas Django kamu telah berjalan dengan baik.
+Menjalankan ulang aplikasi Django di terminal dan memverifikasi bahwa aplikasi Flutter atau browser dapat berhasil mengakses endpoint JSON-nya (misalnya, http://localhost:8000/json/) untuk melihat respons data JSON yang telah dibuat. Jika menggunakan emulator Android untuk pengujian, pastikan aplikasi Flutter menggunakan alamat khusus 10.0.2.2 sebagai pengganti localhost di URL API
+
+b. Mengimplementasikan fitur registrasi akun pada proyek tugas Flutter.
+Mengumpulkan username dan password melalui TextFormField, lalu menggunakan klien CookieRequest yang dibagikan untuk mengirimkan data tersebut dalam format JSON melalui request.postJson() ke endpoint registrasi Django (misalnya, .../auth/register/). Jika server merespons dengan status 'success', aplikasi akan menampilkan SnackBar notifikasi dan mengarahkan pengguna ke LoginPage
+
+c. Membuat halaman login pada proyek tugas Flutter.
+Halaman login dibuat menggunakan widget `StatefulWidget` (`LoginPage`) yang menyediakan input `TextField` untuk menampung username dan password,. Kemudian, logika autentikasi diimplementasikan pada tombol Login yang menggunakan instance `CookieRequest` (diakses melalui `context.watch()`) untuk memanggil metode `request.login(url, data)`. jJika berhasil (`request.loggedIn` adalah true), pengguna akan dinavigasikan ke halaman menu utama (`MyHomePage`).
+
+d. Mengintegrasikan sistem autentikasi Django dengan proyek tugas Flutter.
+Integrasi sistem autentikasi Django dilakukan dengan menyediakan instance `CookieRequest` (dari package `pbp_django_auth`) yang dibagikan secara universal menggunakan `Provider`. Klien ini kemudian digunakan untuk memanggil metode `request.login(url, data)` untuk mengirim kredensial ke endpoint Django, yang kemudian secara otomatis menyimpan cookie sesi untuk mempertahankan status autentikasi pengguna di seluruh aplikasi.
+
+e. Membuat model kustom sesuai dengan proyek aplikasi Django.
+Model kustom dibuat dengan menyalin data JSON dari ndpoint* Django dan menggunakan alat bantu seperti Quicktype untuk menghasilkan class Model Dart secara otomatis, yang mencakup method `fromJson()` dan `toJson()` untuk memastikan konversi data JSON ke objek Dart yang aman tipenya. Kode model yang dihasilkan ini kemudian ditempatkan di folder `lib/models/` pada proyek Flutter.
+
+f. Membuat halaman yang berisi daftar semua item yang terdapat pada endpoint JSON di Django yang telah kamu deploy.
+Menggunakan widget `FutureBuilder` untuk memanggil fungsi asinkron (`fetchProduct`) yang melakukan permintaan `request.get('.../json/')` menggunakan `CookieRequest`, kemudian data JSON yang diterima di-decode dan dikonversi menjadi daftar objek Model Dart (`ProductEntry.fromJson(obj)`) untuk ditampilkan dalam `ListView` atau `GridView`.
+
+g. Tampilkan name, price, description, thumbnail, category, dan is_featured dari masing-masing item pada halaman ini (Dapat disesuaikan dengan field yang kalian buat sebelumnya).
+Data ditampilkan dalam widget `ProductEntryCard` yang merupakan bagian dari `GridView.builder`, di mana setiap card menerima objek `ProductEntry` yang aman tipenya, memungkinkan akses langsung ke properti seperti `product.name`, `product.price`, dan `product.description` untuk diikat ke widget `Text`, serta menggunakan logika kondisional untuk menampilkan label 'Featured' berdasarkan nilai `product.isFeatured`. Atribut `thumbnail` ditampilkan menggunakan `Image.network` yang memanggil endpoint proxy dengan URL gambar dari `product.thumbnail`.
+
+h. Membuat halaman detail untuk setiap item yang terdapat pada halaman daftar Item.
+Buat halaman detail baru (`ProductDetailPage`) yang menerima objek Model Dart (`ProductEntry`) dari item yang dipilih sebagai argumen wajib. Kemudian, pada halaman daftar item (`ProductEntryListPage`), implementasikan fungsi `onTap` di setiap kartu (`ProductEntryCard`) yang menggunakan `Navigator.push` untuk menavigasi sambil mengirimkan objek `ProductEntry` yang diklik ke halaman detail tersebut.
+
+i. Halaman ini dapat diakses dengan menekan salah satu card item pada halaman daftar Item.
+Halaman detail diakses dengan mengimplementasikan callback `onTap` pada widget `ProductEntryCard` yang berada dalam `GridView.builder`. Di dalam fungsi `onTap` tersebut, `Navigator.push` digunakan untuk menavigasi ke `ProductDetailPage` sambil mengirimkan objek item (`ProductEntry`) yang sesuai sebagai argumen.
+
+j. Tampilkan seluruh atribut pada model item kamu pada halaman ini.
+Dengan mengakses properti objek `ProductEntry` yang diterima sebagai argumen wajib pada constructor halaman tersebut. Kemudian, atribut seperti `product.name`, `product.description`, dll diikat secara eksplisit ke widget `Text` yang sesuai, sementara `product.thumbnail` ditampilkan menggunakan `Image.network`.
+
+k. Tambahkan tombol untuk kembali ke halaman daftar item.
+Tombol untuk kembali ke halaman daftar item secara otomatis muncul di `AppBar` halaman detail (`ProductDetailPage`), yang berfungsi dengan memanggil `Navigator.pop(context)` untuk kembali ke layar sebelumnya (`ProductEntryListPage`) karena halaman tersebut diakses menggunakan `Navigator.push`.
+
+l. Melakukan filter pada halaman daftar item dengan hanya menampilkan item yang terasosiasi dengan pengguna yang login.
+Untuk melakukan filter item yang terasosiasi dengan pengguna yang login, `CookieRequest` digunakan untuk memanggil endpoint `.../auth/whoami/` guna mendapatkan username pengguna saat ini. Kemudian, saat memproses data JSON yang di-fetch dari endpoint daftar item, data tersebut di-loop dan hanya item yang field owner-nya (diperiksa melalui beberapa kemungkinan key) cocok dengan username yang login tersebut yang dikonversi menjadi objek Model Dart.
